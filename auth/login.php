@@ -7,23 +7,29 @@ if (isset($_POST['login'])) {
     $password = $_POST['password'];
 
     // Gunakan prepared statement untuk keamanan
-    $query = "SELECT * FROM akun WHERE username = ? AND password = ?";
+    $query = "SELECT * FROM akun WHERE username = ?";
     $stmt = mysqli_prepare($connection, $query);
-    mysqli_stmt_bind_param($stmt, "ss", $username, $password);
+    mysqli_stmt_bind_param($stmt, "s", $username);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
     if (mysqli_num_rows($result) == 1) {
         $row = mysqli_fetch_assoc($result);
-        $_SESSION['username'] = $username;
-        $_SESSION['id'] = $row['id'];
-        $_SESSION['is_admin'] = $row['is_admin'] == 1 ? true : false;
 
-        // Redirect ke halaman awal
-        header('Location: ../index.php');
-        exit();
+        // Verifikasi password
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['username'] = $username;
+            $_SESSION['id'] = $row['id'];
+            $_SESSION['is_admin'] = $row['is_admin'] == 1 ? true : false;
+
+            // Redirect ke halaman awal
+            header('Location: ../index.php');
+            exit();
+        } else {
+            $error = "Password salah";
+        }
     } else {
-        $error = "Username atau password salah";
+        $error = "Username tidak ditemukan";
     }
 }
 ?>
